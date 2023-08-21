@@ -1,0 +1,62 @@
+2096 : 0 Arrival clock: 6 Departure clock: 86
+Channel: 0 Rank: 1 Bank: 0 Row: 0
+944 : 0 Arrival clock: 3 Departure clock: 633
+Channel: 0 Rank: 0 Bank: 0 Row: 9
+3264 : 0 Arrival clock: 9 Departure clock: 640
+Channel: 0 Rank: 1 Bank: 1 Row: 2
+6736 : 0 Arrival clock: 12 Departure clock: 642
+Channel: 1 Rank: 1 Bank: 0 Row: 7
+7856 : 0 Arrival clock: 24 Departure clock: 654
+Channel: 1 Rank: 1 Bank: 1 Row: 8
+1200 : 0 Arrival clock: 30 Departure clock: 660
+Channel: 0 Rank: 0 Bank: 1 Row: 2
+4640 : 0 Arrival clock: 54 Departure clock: 684
+Channel: 1 Rank: 0 Bank: 0 Row: 6
+2560 : 0 Arrival clock: 39 Departure clock: 686
+Channel: 0 Rank: 1 Bank: 0 Row: 5
+5808 : 0 Arrival clock: 84 Departure clock: 714
+Channel: 1 Rank: 0 Bank: 1 Row: 8
+768 : 0 Arrival clock: 15 Departure clock: 1233
+Channel: 0 Rank: 0 Bank: 0 Row: 7
+3328 : 0 Arrival clock: 21 Departure clock: 1240
+Channel: 0 Rank: 1 Bank: 1 Row: 3
+6816 : 0 Arrival clock: 18 Departure clock: 1242
+Channel: 1 Rank: 1 Bank: 0 Row: 8
+7296 : 0 Arrival clock: 33 Departure clock: 1254
+Channel: 1 Rank: 1 Bank: 1 Row: 2
+1392 : 0 Arrival clock: 51 Departure clock: 1260
+Channel: 0 Rank: 0 Bank: 1 Row: 3
+4032 : 0 Arrival clock: 63 Departure clock: 1284
+Channel: 1 Rank: 0 Bank: 0 Row: 0
+2064 : 0 Arrival clock: 42 Departure clock: 1286
+Channel: 0 Rank: 1 Bank: 0 Row: 0
+3392 : 0 Arrival clock: 36 Departure clock: 1291
+Channel: 0 Rank: 1 Bank: 1 Row: 3
+4096 : 0 Arrival clock: 66 Departure clock: 1334
+Channel: 1 Rank: 0 Bank: 0 Row: 0
+896 : 0 Arrival clock: 27 Departure clock: 1833
+Channel: 0 Rank: 0 Bank: 0 Row: 8
+6736 : 0 Arrival clock: 57 Departure clock: 1842
+Channel: 1 Rank: 1 Bank: 0 Row: 7
+2144 : 0 Arrival clock: 48 Departure clock: 1886
+Channel: 0 Rank: 1 Bank: 0 Row: 1
+3584 : 0 Arrival clock: 45 Departure clock: 1891
+Channel: 0 Rank: 1 Bank: 1 Row: 5
+2128 : 0 Arrival clock: 69 Departure clock: 1936
+Channel: 0 Rank: 1 Bank: 0 Row: 1
+320 : 0 Arrival clock: 60 Departure clock: 2433
+Channel: 0 Rank: 0 Bank: 0 Row: 3
+6672 : 0 Arrival clock: 90 Departure clock: 2442
+Channel: 1 Rank: 1 Bank: 0 Row: 6
+6672 : 0 Arrival clock: 93 Departure clock: 2492
+Channel: 1 Rank: 1 Bank: 0 Row: 6
+2944 : 0 Arrival clock: 78 Departure clock: 2536
+Channel: 0 Rank: 1 Bank: 0 Row: 9
+256 : 0 Arrival clock: 72 Departure clock: 3033
+Channel: 0 Rank: 0 Bank: 0 Row: 2
+640 : 0 Arrival clock: 75 Departure clock: 3633
+Channel: 0 Rank: 0 Bank: 0 Row: 6
+704 : 0 Arrival clock: 81 Departure clock: 4233
+Channel: 0 Rank: 0 Bank: 0 Row: 7
+320 : 0 Arrival clock: 87 Departure clock: 4833
+Channel: 0 Rank: 0 Bank: 0 Row: 3
