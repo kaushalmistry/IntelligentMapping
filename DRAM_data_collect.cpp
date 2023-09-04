@@ -67,6 +67,8 @@ struct request {
 
 ofstream MTF("DRAM_Queue_Simulation.txt");
 
+ofstream DATA_COLLECTION("QueueSize.csv");
+
 
 // queue<request*> q;
 /*
@@ -80,7 +82,7 @@ When the request arrived and departed from the different queue.
 
 void moveRequestBw(queue<request*>& sourceQueue, queue<request*>& targetQueue, int delay) {
     if (!sourceQueue.empty() && (clk - sourceQueue.front()->localAT) >= delay) {
-        cout << "Pushing to backword queue @: " << clk << endl;
+        // cout << "Pushing to backword queue @: " << clk << endl;
         request* r = sourceQueue.front();
         sourceQueue.pop();
         r->localAT = clk;
@@ -144,7 +146,7 @@ class Bank {
         if (canProcess) return;
         processing[0]->rClk--;
         if (processing[0]->rClk == 0) {
-            cout << "Processed: " << clk << endl;
+            // cout << "Processed: " << clk << endl;
             canProcess = true;
             if (processing[0]->RW) {
                 processing[0]->localAT = clk;
@@ -159,7 +161,7 @@ class Bank {
 
     void updateRequests(queue<request*>& sourceQueue, int delay) {
         if (canProcess && !sourceQueue.empty() && (clk - sourceQueue.front()->localAT) >= delay) {
-            cout << "Putting it to process @: " << clk << endl;
+            // cout << "Putting it to process @: " << clk << endl;
             // cout << "started processing: " << clk << endl;
             request* r = sourceQueue.front();
             sourceQueue.pop();
@@ -167,8 +169,8 @@ class Bank {
             r->rClk = Access(r);
             processing.push_back(r);
             canProcess = false;
-            if (r->RW) curWriteQSize--;
-            else curReadQSize--;
+            // if (r->RW) curWriteQSize--;
+            // else curReadQSize--;
         }
     }
 
@@ -222,18 +224,17 @@ class Rank {
         if (source.size() > maxRankQSize) maxRankQSize = source.size();
 
         if (!source.empty() && (clk - source.front()->localAT) >= delay) {
-            cout << "Pushing from rank to bank queue @: " << clk << endl;
+            // cout << "Pushing from rank to bank queue @: " << clk << endl;
             // Check if the bank queue has space to accomodate new request
             request* r = source.front();
 
-            if (r->RW && banks[r->bank].curWriteQSize < bankQSize) {
+            if (r->RW) {
                 banks[r->bank].curWriteQSize++;
                 banks[r->bank].writeForwardQueue.push(r);
-            } else if (r->RW == 0 && banks[r->bank].curReadQSize < bankQSize) {
+            } else {
                 banks[r->bank].curReadQSize++;
                 banks[r->bank].readForwardQueue.push(r);
-            } else
-                return; // The queue doesn't have space to accomodate new request
+            }
 
             r->localAT = clk;
             source.pop();
@@ -294,7 +295,7 @@ class Channel {
         if (source.size() > maxChannelQSize) maxChannelQSize = source.size();
 
         if (!source.empty() && (clk - source.front()->localAT) >= delay) {
-            cout << "Moving from Channel to Rank@: " << clk << endl;
+            // cout << "Moving from Channel to Rank@: " << clk << endl;
             request* r = source.front();
             source.pop();
             r->localAT = clk;
@@ -373,7 +374,7 @@ class Memory {
 
     void collectRequests(queue<request*>& source, int delay) {
         if (!source.empty() && (clk - source.front()->localAT) >= delay) {
-            cout << "Popping out from channel queue @: " << clk;
+            // cout << "Popping out from channel queue @: " << clk;
             request* r = source.front();
             source.pop();
             serviceTime.push_back(clk - r->arrivalTime);
@@ -400,12 +401,23 @@ class Memory {
             r->RW = RW;
             r->arrivalTime = clk;
             r->localAT = clk;
-            cout << "Pusing to channel queue @: " << clk << endl;
+            // cout << "Pusing to channel queue @: " << clk << endl;
             if (RW)
                 channels[r->channel].writeForwardQueue.push(r);
             else
                 channels[r->channel].readForwardQueue.push(r);
         }
+    }
+
+    void checkQSizes() {
+        for (int i = 0; i < noOfChannels; i++) {
+            for (int j = 0; j < noOfRanks; j++) {
+                for (int k = 0; k < noOfBanks; k++) {
+                    DATA_COLLECTION << channels[i].ranks[j].banks[k].readForwardQueue.size() << ", ";
+                }
+            }
+		}
+        DATA_COLLECTION << endl;
     }
 
 
@@ -436,7 +448,7 @@ class Memory {
 };
 
 
-ifstream TF("smallTrace2.txt");
+ifstream TF("../smallTrace.txt");
 
 void DRAMSim(Memory* m) {
     long long Address;
@@ -453,11 +465,14 @@ void DRAMSim(Memory* m) {
     } else {
         m->Access(1, 0, false);
     }
+    if (clk % 50 == 0) {
+        m->checkQSizes();
+    }
 }
 
 
 int main() {
-    cout << "DRAM request handling with Queue Simulation started..!\n" << endl;
+    // cout << "DRAM request handling with Queue Simulation started..!\n" << endl;
 	srand(time(NULL));
     int maxAddr = 1 << 15;
 
