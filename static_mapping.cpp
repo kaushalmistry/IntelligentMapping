@@ -511,9 +511,23 @@ class Memory {
 
         int l = 0, r = x-1;
 
-        // while (l < r && requestsInQueue[l][0] > avg) {
-        //     // replace 1st and 3rd part of the overloaded bank with the 2nd and 4th part of underloaded bank
-        // }
+        while (l < r && requestsInQueue[l][0] > avg) {
+            // replace 1st and 3rd part of the overloaded bank with the 2nd and 4th part of underloaded bank
+            vector<int> firstPart = {(int)requestsInQueue[l][1], (int)requestsInQueue[l][2], (int)requestsInQueue[l][3], 0};
+            vector<int> thirdPart = {(int)requestsInQueue[l][1], (int)requestsInQueue[l][2], (int)requestsInQueue[l][3], 2};
+
+            vector<int> secondPart = {(int)requestsInQueue[r][1], (int)requestsInQueue[r][2], (int)requestsInQueue[r][3], 0};
+            vector<int> fourthPart = {(int)requestsInQueue[r][1], (int)requestsInQueue[r][2], (int)requestsInQueue[r][3], 2};
+
+            
+            // updating the mapping
+            mapping[firstPart] = secondPart;
+            mapping[thirdPart] = fourthPart;
+            mapping[secondPart] = firstPart;
+            mapping[fourthPart] = secondPart;
+            l++;
+            r--;
+        }
 
     }
 
@@ -578,7 +592,7 @@ void DRAMSim(Memory* m) {
 
 
 int main() {
-    // cout << "DRAM request handling with Queue Simulation started..!\n" << endl;
+    cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
 	srand(time(NULL));
     int maxAddr = 1 << 15;
 
@@ -596,6 +610,8 @@ int main() {
     // }
 
 
+    DRAMSim(m);
+    cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
     DRAMSim(m);
 
     // m->collectStats();
