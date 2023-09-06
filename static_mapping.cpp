@@ -202,6 +202,7 @@ class Bank {
 	int getNumRead() { return ReadCtr; }
 
     long long getNumRequest() { return requestCnt; }
+    void resetRequestCnt() { requestCnt = 0; }
 };
 
 
@@ -334,6 +335,8 @@ class Channel {
 
 };
 
+ofstream MAPPING_DATA("Mappings.txt");
+
 class Memory {
     int noOfChannels, noOfRanks, noOfBanks, noOfParts, noOfRows, noOfCols;
 
@@ -360,10 +363,19 @@ class Memory {
         }
         requestsInQueue.resize(c*r*b, {0, 0, 0, 0});
 
+        resetRequestCnt();
+
+        generateInitialMapping();
+    }
+
+    void resetRequestCnt() {
         int x = 0;
+        vector<long long> dummy = {4000, 3000, 2300, 2200, 1800, 1500, 700, 500};
         for (int i = 0; i < noOfChannels; i++) {
             for (int j = 0; j < noOfRanks; j++) {
                 for (int k = 0; k < noOfBanks; k++) {
+                    channels[i].ranks[j].banks[k].resetRequestCnt();
+                    // requestsInQueue[x][0] = dummy[x];
                     requestsInQueue[x][1] = i;
                     requestsInQueue[x][2] = j;
                     requestsInQueue[x][3] = k;
@@ -371,8 +383,6 @@ class Memory {
                 }
             }
         }
-
-        generateInitialMapping();
     }
 
 
@@ -391,6 +401,7 @@ class Memory {
             }
         }
 
+        storeMapping();
     }
 
 
@@ -409,6 +420,8 @@ class Memory {
         start = end+1; end = start + rowBits - 1;
         r->row = extractBits(address, end, start); // Row Bits
 
+        r->part = (r->row / numOfPartsInEachBank);
+
         start = end+1; end = start + bankBits - 1;
         r->bank = extractBits(address, end, start); // Bank bits
 
@@ -422,14 +435,18 @@ class Memory {
     }
 
 
-    void mappingRequest(request* r) {
-        vector<int> tmp = {r->channel, r->rank, r->bank, r->part};
+    void mappingRequest(request** r) {
+        vector<int> tmp = {(*r)->channel, (*r)->rank, (*r)->bank, (*r)->part};
+
+        // cout << "Checking the appropriate mapping: ";
+        // for (auto i: tmp) cout << i << ", ";
+        // cout << endl;
 
         auto itr = mapping[tmp];
-        r->channel = tmp[0];
-        r->rank = tmp[1];
-        r->bank = tmp[2];
-        r->part = tmp[3];
+        (*r)->channel = itr[0];
+        (*r)->rank = itr[1];
+        (*r)->bank = itr[2];
+        (*r)->part = itr[3];
     }
 
 
@@ -438,7 +455,7 @@ class Memory {
             // cout << "Popping out from channel queue @: " << clk;
             request* r = source.front();
             source.pop();
-            serviceTime.push_back(clk - r->arrivalTime);
+            // serviceTime.push_back(clk - r->arrivalTime);
             MTF << "Channel: " << r->channel << " Rank: " << r->rank << " Bank: " << r->bank << " Row: " << r->row << endl;
             MTF << hex << r->address << dec << " : " << r->RW << " Arrival clock: " << r->arrivalTime << " Departure clock: " << clk << endl;
         }
@@ -460,8 +477,11 @@ class Memory {
             // cout << "Putting request to channel queue" << clk << endl;
             request* r = sliceAddress(address);
 
+            // cout << "[Request Before mapping]: " << r->channel << ", " << r->rank << ", " << r->bank << ", " << r->part << ", " << r->row << endl;
+
             // Updating the request mapping
-            mappingRequest(r);
+            mappingRequest(&r);
+            // cout << "[Request after mapping]: " << r->channel << ", " << r->rank << ", " << r->bank << ", " << r->part << ", " << r->row << endl;
 
             r->RW = RW;
             r->arrivalTime = clk;
@@ -502,16 +522,27 @@ class Memory {
             }
         }
 
-        cout << "Total requests: " << sum << endl;
-        long long avg = sum / x;
-
-        cout << "Average requests per bank: " << avg << endl;
-
         sort(requestsInQueue.rbegin(), requestsInQueue.rend());
 
-        int l = 0, r = x-1;
+        cout << "\n\nRequests: " << endl;
+        for (auto r: requestsInQueue) {
+            cout << r[0] << " : " << r[1] << " : " << r[2] << " : " << r[3] << endl;
+        }
 
+
+        cout << "\n=>Total requests: " << sum << endl;
+        long long avg = sum / x;
+
+        cout << "\n=>Average requests per bank: " << avg << endl;
+
+
+        int l = 0, r = x-1;
+        // cout << l << " : " << r << endl;
+
+        cout << "\n\nUpdating mapping: \n\n";
         while (l < r && requestsInQueue[l][0] > avg) {
+            cout << l << " : " << r << endl;
+        // while (l < r) {
             // replace 1st and 3rd part of the overloaded bank with the 2nd and 4th part of underloaded bank
             vector<int> firstPart = {(int)requestsInQueue[l][1], (int)requestsInQueue[l][2], (int)requestsInQueue[l][3], 0};
             vector<int> thirdPart = {(int)requestsInQueue[l][1], (int)requestsInQueue[l][2], (int)requestsInQueue[l][3], 2};
@@ -524,11 +555,27 @@ class Memory {
             mapping[firstPart] = secondPart;
             mapping[thirdPart] = fourthPart;
             mapping[secondPart] = firstPart;
-            mapping[fourthPart] = secondPart;
+            mapping[fourthPart] = thirdPart;
             l++;
             r--;
         }
 
+        cout << endl;
+
+
+        storeMapping();
+
+    }
+
+    void storeMapping() {
+        MAPPING_DATA << "The mapping is as follows: \n";
+        for (auto [k, v]: mapping) {
+            for (auto i: k) MAPPING_DATA << i << " ";
+            MAPPING_DATA << " : ";
+            for (auto i: v) MAPPING_DATA << i << " ";
+            MAPPING_DATA << "\n";
+        }
+        MAPPING_DATA << "\n\n";
     }
 
 
@@ -549,12 +596,12 @@ class Memory {
         cout << "=> Total Page Hits = " << TotalPageHit << "\n=> Total Page Miss = " << TotalPageMiss;
 		cout << "\n=> Total Reads = " << TotalRead << "\n=> Total Writes = " << TotalWrite<<"\n";
 
-        cout << "\n\n[Rank] The maximum size of the queue during execution is: " << maxRankQSize << endl;
-        cout << "\n\n[Channel] The maximum size of the queue during execution is: " << maxChannelQSize << endl;
+        // cout << "\n\n[Rank] The maximum size of the queue during execution is: " << maxRankQSize << endl;
+        // cout << "\n\n[Channel] The maximum size of the queue during execution is: " << maxChannelQSize << endl;
 
-        double avg = 1.0 * accumulate(serviceTime.begin(), serviceTime.end(), 0LL) / serviceTime.size();
+        // double avg = 1.0 * accumulate(serviceTime.begin(), serviceTime.end(), 0LL) / serviceTime.size();
 
-        cout << "\n\nThe average service time of the requests = " << avg << " clock cycles." << endl;
+        // cout << "\n\nThe average service time of the requests = " << avg << " clock cycles." << endl;
     }
 };
 
@@ -567,9 +614,9 @@ void DRAMSim(Memory* m) {
     clk = 0;
 
     // Creating file stream 
-    ifstream TF("../smallTrace.txt");
+    ifstream TF("../smallTrace2.txt");
 
-    while (clk < 1e9) {
+    while (clk < 1e8) {
         clk++;
         long long Address;
         char rw;
@@ -587,7 +634,13 @@ void DRAMSim(Memory* m) {
         }
     }
 
+    m->collectStats();
+
     m->updateMapping();
+
+    m->resetRequestCnt();
+
+    TF.close();
 }
 
 
@@ -598,10 +651,14 @@ int main() {
 
     Memory* m = new Memory();
     m->init(numOfChannel, numOfRankInEachChannel, numOfBankInEachRank, numOfPartsInEachBank, numRows, numCols);
-    for (auto r: m->requestsInQueue) {
-        cout << r[0] << " : " << r[1] << " : " << r[2] << " : " << r[3] << endl;
-    }
+    // for (auto r: m->requestsInQueue) {
+    //     cout << r[0] << " : " << r[1] << " : " << r[2] << " : " << r[3] << endl;
+    // }
 
+
+
+
+    // cout << "\n\nMapping before: \n";
     // for (auto [k, v]: m->mapping) {
     //     for (auto i: k) cout << i << " ";
     //     cout << " : ";
@@ -609,12 +666,22 @@ int main() {
     //     cout << endl;
     // }
 
-
+    // m->updateMapping();
+    // m->storeMapping();
     DRAMSim(m);
+
     cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
+
     DRAMSim(m);
 
-    // m->collectStats();
+    cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
+
+    DRAMSim(m);
+
+    MTF.close();
+    DATA_COLLECTION.close();
+    MAPPING_DATA.close();
+    
 
     return 0;
 }
