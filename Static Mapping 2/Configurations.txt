@@ -1,0 +1,32 @@
+## Configuration
+DRAM Size: 32 kB
+The DRAM is divided into channels, ranks, banks, rows, and columns
+
+No. of Channels = 2
+No. of Ranks    = 2
+No. of Banks    = 2
+No. of Rows     = 16
+No. of Columns  = 256
+
+Address = 15 bits
+_____________________
+| 1 | 1 | 1 | 4 | 8 |
+---------------------
+
+Experiment: 
+Took the Experiment of updating the Straight mapping to different based on the number of requests each bank got
+
+Results:
+
+1. 2 iterations:
+    - 1st iteration (Straight mapping) : 3774775
+    - 2nd iteration (Updated mapping)  : 2992095
+
+    - Verdict: 782680 less memory cycles
+        - 20 % improvement
+
+
+2. 3 iterations:
+    - 1st iteration (Straight mapping) : 3774775
+    - 2nd iteration (Updated mapping)  : 2992095
+    - 3rd iteration (Updated mapping)  : 3002155

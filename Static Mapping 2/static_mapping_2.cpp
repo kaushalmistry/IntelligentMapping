@@ -47,6 +47,8 @@ using namespace std;
 
 #define bankQSize 32
 
+#define bankQThreshold 8500
+
 int maxAddr = 1 << 15;
 long long clk = 0;
 
@@ -111,6 +113,8 @@ class Bank {
     long long requestCnt;
 
     int noOfRows, noOfCols;
+
+    long long cntQueueAboveThreshold;
 
 	public:
 
@@ -210,6 +214,11 @@ class Bank {
 
     long long getNumRequest() { return requestCnt; }
     void resetRequestCnt() { requestCnt = 0; }
+
+    void updateThresholdCnt() { cntQueueAboveThreshold++; }
+    void resetThresholdCnt() { cntQueueAboveThreshold = 0; }
+    long long getThresholdCnt() { return cntQueueAboveThreshold; }
+
 };
 
 
@@ -506,6 +515,12 @@ class Memory {
             for (int j = 0; j < noOfRanks; j++) {
                 for (int k = 0; k < noOfBanks; k++) {
                     DATA_COLLECTION << channels[i].ranks[j].banks[k].readForwardQueue.size() << ", ";
+
+
+                    // Here it updates the count of the bank if the size surpasses the threshold
+                    if (channels[i].ranks[j].banks[k].readForwardQueue.size() > bankQThreshold) {
+                        channels[i].ranks[j].banks[k].updateThresholdCnt();
+                    }
                 }
             }
 		}
@@ -514,6 +529,7 @@ class Memory {
 
     /**
      * Based on the stats update the mapping to map different parts of the bank to other bank part
+     * Updates the mapping based on the count of times the bank q surpasses the threshold
     */
     void updateMapping() {
         int x = 0;
@@ -521,8 +537,8 @@ class Memory {
         for (int i = 0; i < noOfChannels; i++) {
             for (int j = 0; j < noOfRanks; j++) {
                 for (int k = 0; k < noOfBanks; k++) {
-                    requestsInQueue[x][0] = channels[i].ranks[j].banks[k].getNumRequest();
-                    sum += requestsInQueue[x][0];
+                    requestsInQueue[x][0] = channels[i].ranks[j].banks[k].getThresholdCnt();
+                    // sum += requestsInQueue[x][0];
                     cout << x << " : " << requestsInQueue[x][0] << endl;
                     x++;
                 }
@@ -537,17 +553,17 @@ class Memory {
         }
 
 
-        cout << "\n=>Total requests: " << sum << endl;
-        long long avg = sum / x;
+        // cout << "\n=>Total requests: " << sum << endl;
+        // long long avg = sum / x;
 
-        cout << "\n=>Average requests per bank: " << avg << endl;
+        // cout << "\n=>Average requests per bank: " << avg << endl;
 
 
         int l = 0, r = x-1;
         // cout << l << " : " << r << endl;
 
         cout << "\n\nUpdating mapping: \n\n";
-        while (l < r && requestsInQueue[l][0] > avg) {
+        while (l < r && requestsInQueue[l][0] > 1) {
             cout << l << " : " << r << endl;
         // while (l < r) {
             // replace 1st and 3rd part of the overloaded bank with the 2nd and 4th part of underloaded bank
@@ -568,8 +584,6 @@ class Memory {
         }
 
         cout << endl;
-
-
         storeMapping();
 
     }
@@ -623,7 +637,7 @@ void DRAMSim(Memory* m) {
     // Creating file stream 
     ifstream TF("../../smallTrace.txt");
 
-    while (clk < 1e8) {
+    while (clk < 1e7) {
         clk++;
         long long Address;
         char rw;
@@ -647,7 +661,7 @@ void DRAMSim(Memory* m) {
 
     m->collectStats();
 
-    // m->updateMapping();
+    m->updateMapping();
 
     m->resetRequestCnt();
 
@@ -656,7 +670,7 @@ void DRAMSim(Memory* m) {
 
 
 int main() {
-    cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
+    // cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
 	srand(time(NULL));
     int maxAddr = 1 << 15;
 
@@ -679,15 +693,15 @@ int main() {
 
     // m->updateMapping();
     // m->storeMapping();
+    // DRAMSim(m);
+
+    cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
+
     DRAMSim(m);
 
-    // cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
+    cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
 
-    // DRAMSim(m);
-
-    // cout << "\n\n\nDRAM request handling with Queue Simulation started..!\n" << endl;
-
-    // DRAMSim(m);
+    DRAMSim(m);
 
     MTF.close();
     DATA_COLLECTION.close();
